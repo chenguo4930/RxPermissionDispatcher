@@ -13,6 +13,6 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.CLASS)
-public @interface OnNeedAskAgain {
+public @interface OnNeverAskAgain {
     String[] value();
 }
