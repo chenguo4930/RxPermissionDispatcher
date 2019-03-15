@@ -1,9 +1,3 @@
-//apply plugin: 'com.android.library'
-
-//apply plugin: 'kotlin-android'
-//
-//apply plugin: 'kotlin-android-extensions'
-
 apply plugin: 'kotlin'
 
 dependencies {
@@ -13,7 +7,8 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.3.21'
     implementation 'com.squareup:javapoet:1.11.1'
     implementation 'com.squareup:kotlinpoet:1.0.1'
-    implementation project(':annotatioin')
+//    api project(':annotatioin')
+    implementation project(path: ':annotation')
 }
 
 

@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * @author ChengGuo
  * @date 2019/3/14
  */
-@Target(ElementType.METHOD)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
 public @interface RuntimePermissions {
 }
