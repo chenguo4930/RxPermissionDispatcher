@@ -69,7 +69,7 @@ class PermissionsProcessor : AbstractProcessor() {
     }
 
     private fun processKotlin(element: Element, rpe: RuntimePermissionsElement, requestCodeProvider: RequestCodeProvider) {
-        // FIXME: weirdly under kaptKotlin files is not recognized as source file on AS or IntelliJ
+        //  weirdly under kaptKotlin files is not recognized as source file on AS or IntelliJ
         // so as a workaround we generate .kt file in generated/source/kapt/$sourceSetName
         // ref: https://github.com/hotchemi/PermissionsDispatcher/issues/320#issuecomment-316175775
         val kaptGeneratedDirPath = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]?.replace("kaptKotlin", "kapt")
