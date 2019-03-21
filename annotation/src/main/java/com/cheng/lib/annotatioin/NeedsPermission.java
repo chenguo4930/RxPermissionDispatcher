@@ -6,8 +6,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- *  在需要权限的方法上注册
- *
  * @author ChengGuo
  * @date 2019/3/14
  */
