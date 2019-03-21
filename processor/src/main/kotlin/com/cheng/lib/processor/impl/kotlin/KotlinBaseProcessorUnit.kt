@@ -94,7 +94,7 @@ abstract class KotlinBaseProcessorUnit : KtProcessorUnit {
     }
 
     private fun createPendingRequestProperty(e: ExecutableElement): PropertySpec {
-        val type = ClassName("permissions.dispatcher", "GrantableRequest").copy(nullable = true)
+        val type = ClassName("com.cheng.lib.annotatioin", "GrantableRequest").copy(nullable = true)
         return PropertySpec
                 .builder(pendingRequestFieldName(e), type, KModifier.PRIVATE)
                 .mutable()
@@ -407,7 +407,7 @@ abstract class KotlinBaseProcessorUnit : KtProcessorUnit {
 
         val builder = TypeSpec.classBuilder(permissionRequestTypeName(rpe, needsMethod))
                 .addTypeVariables(rpe.ktTypeVariables)
-                .addSuperinterface(ClassName("permissions.dispatcher", superInterfaceName))
+                .addSuperinterface(ClassName("com.cheng.lib.annotatioin", superInterfaceName))
                 .addModifiers(KModifier.PRIVATE)
 
         // Add required fields to the target

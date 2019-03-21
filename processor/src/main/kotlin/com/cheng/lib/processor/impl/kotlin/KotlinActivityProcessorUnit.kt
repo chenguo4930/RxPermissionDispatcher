@@ -20,6 +20,6 @@ class KotlinActivityProcessorUnit : KotlinBaseProcessorUnit() {
     }
 
     override fun addRequestPermissionsStatement(builder: FunSpec.Builder, targetParam: String, permissionField: String, requestCodeField: String) {
-        builder.addStatement("%T.requestPermissions(%L, %N, %N)", ClassName("androidx.core.app", "ActivityCompat"), targetParam, permissionField, requestCodeField)
+        builder.addStatement("%T.requestPermissions(%L, %N, %N)", ClassName("android.support.v4.app", "ActivityCompat"), targetParam, permissionField, requestCodeField)
     }
 }

@@ -27,7 +27,7 @@ import javax.lang.model.element.Modifier
 abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
 
     protected val PERMISSION_UTILS: ClassName = ClassName.get("permissions.dispatcher", "PermissionUtils")
-    private val grantableRequest = ClassName.get("permissions.dispatcher", "GrantableRequest")
+    private val grantableRequest = ClassName.get("com.cheng.lib.annotatioin", "GrantableRequest")
     private val BUILD = ClassName.get("android.os", "Build")
     private val MANIFEST_WRITE_SETTING = "android.permission.WRITE_SETTINGS"
     private val MANIFEST_SYSTEM_ALERT_WINDOW = "android.permission.SYSTEM_ALERT_WINDOW"
@@ -456,7 +456,7 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
         val targetType = rpe.typeName
         val builder = TypeSpec.classBuilder(permissionRequestTypeName(rpe, needsMethod))
                 .addTypeVariables(rpe.typeVariables)
-                .addSuperinterface(ClassName.get("permissions.dispatcher", superInterfaceName))
+                .addSuperinterface(ClassName.get("com.cheng.lib.annotatioin", superInterfaceName))
                 .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
 
         // Add required fields to the target
