@@ -19,10 +19,7 @@ private const val SYSTEM_ALERT_WINDOW = "android.permission.SYSTEM_ALERT_WINDOW"
  * Obtains the [ProcessorUnit] implementation for the provided element.
  * Raises an exception if no suitable implementation exists
  */
-fun <K> findAndValidateProcessorUnit(
-    units: List<ProcessorUnit<K>>,
-    element: Element
-): ProcessorUnit<K> {
+fun <K> findAndValidateProcessorUnit(units: List<ProcessorUnit<K>>, element: Element): ProcessorUnit<K> {
     val type = element.asType()
     try {
         return units.first { type.isSubtypeOf(it.getTargetType()) }
@@ -53,11 +50,7 @@ fun <A : Annotation> checkDuplicatedValue(items: List<ExecutableElement>, annota
  * <p>
  * Raises an exception if it doesn't contain any elements.
  */
-fun <A : Annotation> checkNotEmpty(
-    items: List<ExecutableElement>,
-    rpe: RuntimePermissionsElement,
-    annotationClass: Class<A>
-) {
+fun <A : Annotation> checkNotEmpty(items: List<ExecutableElement>, rpe: RuntimePermissionsElement, annotationClass: Class<A>) {
     if (items.isEmpty()) {
         throw NoAnnotatedMethodsException(rpe, annotationClass)
     }

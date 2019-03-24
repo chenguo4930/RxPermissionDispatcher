@@ -49,11 +49,10 @@ class PermissionsProcessor : AbstractProcessor() {
     }
 
     override fun process(annotations: Set<TypeElement>, roundEnv: RoundEnvironment): Boolean {
-        // Create a RequestCodeProvider which guarantees unique request codes for each permission request
+        //创建一个RequestCodeProvider，保证每个权限请求的唯一请求代码
         val requestCodeProvider = RequestCodeProvider()
 
-        // The Set of annotated elements needs to be ordered
-        // in order to achieve Deterministic, Reproducible Builds
+        // 需要对已注释元素集进行排序、 为了实现确定性，可重复的构建
         roundEnv.getElementsAnnotatedWith(RuntimePermissions::class.java)
                 .sortedBy { it.simpleName.toString() }
                 .forEach {
@@ -69,8 +68,8 @@ class PermissionsProcessor : AbstractProcessor() {
     }
 
     private fun processKotlin(element: Element, rpe: RuntimePermissionsElement, requestCodeProvider: RequestCodeProvider) {
-        //  weirdly under kaptKotlin files is not recognized as source file on AS or IntelliJ
-        // so as a workaround we generate .kt file in generated/source/kapt/$sourceSetName
+        //  奇怪的是，kaptKotlin文件在AS或IntelliJ上不被识别为源文件
+        // 因此，我们在generated / source / kapt / $ sourceSetName中生成.kt文件
         // ref: https://github.com/hotchemi/PermissionsDispatcher/issues/320#issuecomment-316175775
         val kaptGeneratedDirPath = processingEnv.options[KAPT_KOTLIN_GENERATED_OPTION_NAME]?.replace("kaptKotlin", "kapt")
                 ?: run {

@@ -36,14 +36,20 @@ class RuntimePermissionsElement(val e: TypeElement) {
         checkNotEmpty(needsElements, this, NeedsPermission::class.java)
         checkPrivateMethods(needsElements, NeedsPermission::class.java)
         checkMethodSignature(needsElements)
+        //检查混合权限类型
         checkMixPermissionType(needsElements, NeedsPermission::class.java)
+        //检查重复的方法名称
         checkDuplicatedMethodName(needsElements)
     }
 
     private fun validateRationaleMethods() {
+        //检查重复值
         checkDuplicatedValue(onRationaleElements, OnShowRationale::class.java)
+        //检查私人方法
         checkPrivateMethods(onRationaleElements, OnShowRationale::class.java)
+        //检查方法签名
         checkMethodSignature(onRationaleElements)
+        //检查方法参数
         checkMethodParameters(onRationaleElements, 1, typeMirrorOf("com.cheng.lib.annotatioin.PermissionRequest"))
     }
 
