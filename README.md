@@ -1,0 +1,2 @@
+# RxPermissionDispatcher
+底层使用RxPermission + 上层使用PermissionDispatcher的形式，封装一款高性能高便捷的权限使用库
