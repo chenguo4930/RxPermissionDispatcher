@@ -1,6 +1,7 @@
 package com.cheng.lib.rxpermissiondispatcher
 
 import android.Manifest
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.annotation.StringRes
@@ -17,9 +18,14 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         btn_apply_camera.setOnClickListener {
-            showCamera()
+            showCameraWithPermissionCheck()
+        }
+
+        btn_start_second_activity.setOnClickListener {
+            startActivity(Intent(this@MainActivity, SecondActivity::class.java))
         }
     }
+
 
     @NeedsPermission(Manifest.permission.CAMERA)
     fun showCamera() {
@@ -53,5 +59,11 @@ class MainActivity : AppCompatActivity() {
             .setCancelable(false)
             .setMessage(messageResId)
             .show()
+    }
+
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        onRequestPermissionsResult( requestCode, grantResults)
     }
 }

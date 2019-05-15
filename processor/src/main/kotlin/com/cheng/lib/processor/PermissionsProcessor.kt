@@ -5,7 +5,9 @@ import com.cheng.lib.processor.impl.javaProcessorUnits
 import com.cheng.lib.processor.impl.kotlinProcessorUnits
 import com.cheng.lib.processor.util.findAndValidateProcessorUnit
 import com.cheng.lib.processor.util.kotlinMetadataClass
+import sun.rmi.runtime.Log
 import java.io.File
+import java.util.logging.Logger
 import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Filer
 import javax.annotation.processing.ProcessingEnvironment
@@ -67,6 +69,9 @@ class PermissionsProcessor : AbstractProcessor() {
         return true
     }
 
+    /**
+     * 源文件为kotlin文件，则生产kotlin文件，使用kotlin的 扩展模式
+     */
     private fun processKotlin(element: Element, rpe: RuntimePermissionsElement, requestCodeProvider: RequestCodeProvider) {
         //  奇怪的是，kaptKotlin文件在AS或IntelliJ上不被识别为源文件
         // 因此，我们在generated / source / kapt / $ sourceSetName中生成.kt文件
@@ -85,6 +90,9 @@ class PermissionsProcessor : AbstractProcessor() {
         kotlinFile.writeTo(kaptGeneratedDir)
     }
 
+    /**
+     * 源文件为java文件，则生产java文件，使用java的 static静态方法模式
+     */
     private fun processJava(element: Element, rpe: RuntimePermissionsElement, requestCodeProvider: RequestCodeProvider) {
         val processorUnit = findAndValidateProcessorUnit(javaProcessorUnits, element)
         val javaFile = processorUnit.createFile(rpe, requestCodeProvider)

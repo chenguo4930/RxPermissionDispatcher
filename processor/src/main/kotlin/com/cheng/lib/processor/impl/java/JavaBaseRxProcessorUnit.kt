@@ -24,41 +24,57 @@ import javax.lang.model.element.Modifier
  * <p>
  * This generates the parts of code independent from specific permission method signatures for different target objects.
  */
-abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
+abstract class JavaBaseRxProcessorUnit : JavaProcessorUnit {
 
     protected val PERMISSION_UTILS: ClassName = ClassName.get("permissions.dispatcher", "PermissionUtils")
     private val grantableRequest = ClassName.get("com.cheng.lib.annotatioin", "GrantableRequest")
     private val BUILD = ClassName.get("android.os", "Build")
     private val MANIFEST_WRITE_SETTING = "android.permission.WRITE_SETTINGS"
     private val MANIFEST_SYSTEM_ALERT_WINDOW = "android.permission.SYSTEM_ALERT_WINDOW"
-    private val ADD_WITH_CHECK_BODY_MAP = hashMapOf(MANIFEST_SYSTEM_ALERT_WINDOW to SystemAlertWindowHelper(), MANIFEST_WRITE_SETTING to WriteSettingsHelper())
+    private val ADD_WITH_CHECK_BODY_MAP = hashMapOf(
+        MANIFEST_SYSTEM_ALERT_WINDOW to SystemAlertWindowHelper(),
+        MANIFEST_WRITE_SETTING to WriteSettingsHelper()
+    )
 
     final override fun createFile(rpe: RuntimePermissionsElement, requestCodeProvider: RequestCodeProvider): JavaFile {
         return JavaFile.builder(rpe.packageName, createTypeSpec(rpe, requestCodeProvider))
-                .addFileComment(FILE_COMMENT)
-                .build()
+            .addFileComment(FILE_COMMENT)
+            .build()
     }
 
-    abstract fun addRequestPermissionsStatement(builder: MethodSpec.Builder, targetParam: String, permissionField: String, requestCodeField: String)
+    abstract fun addRequestPermissionsStatement(
+        builder: MethodSpec.Builder,
+        targetParam: String,
+        permissionField: String,
+        requestCodeField: String
+    )
 
-    abstract fun addShouldShowRequestPermissionRationaleCondition(builder: MethodSpec.Builder, targetParam: String, permissionField: String, isPositiveCondition: Boolean = true)
+    abstract fun addShouldShowRequestPermissionRationaleCondition(
+        builder: MethodSpec.Builder,
+        targetParam: String,
+        permissionField: String,
+        isPositiveCondition: Boolean = true
+    )
 
     abstract fun getActivityName(targetParam: String): String
 
     private fun createTypeSpec(rpe: RuntimePermissionsElement, requestCodeProvider: RequestCodeProvider): TypeSpec {
         return TypeSpec.classBuilder(rpe.generatedClassName)
-                .addOriginatingElement(rpe.e) // for incremental annotation processing
-                .addModifiers(Modifier.FINAL)
-                .addFields(createFields(rpe, requestCodeProvider))
-                .addMethod(createConstructor())
-                .addMethods(createWithPermissionCheckMethods(rpe))
-                .addMethods(createOnShowRationaleCallbackMethods(rpe))
-                .addMethods(createPermissionHandlingMethods(rpe))
-                .addTypes(createPermissionRequestClasses(rpe))
-                .build()
+            .addOriginatingElement(rpe.e) // for incremental annotation processing
+            .addModifiers(Modifier.FINAL)
+            .addFields(createFields(rpe, requestCodeProvider))
+            .addMethod(createConstructor())
+            .addMethods(createWithPermissionCheckMethods(rpe))
+//                .addMethods(createOnShowRationaleCallbackMethods(rpe))
+//                .addMethods(createPermissionHandlingMethods(rpe))
+//                .addTypes(createPermissionRequestClasses(rpe))
+            .build()
     }
 
-    private fun createFields(rpe: RuntimePermissionsElement, requestCodeProvider: RequestCodeProvider): List<FieldSpec> {
+    private fun createFields(
+        rpe: RuntimePermissionsElement,
+        requestCodeProvider: RequestCodeProvider
+    ): List<FieldSpec> {
         val fields = arrayListOf<FieldSpec>()
         // The set of annotated elements needs to be ordered in order to achieve Deterministic, reproducible builds
         rpe.needsElements.sortedBy { it.simpleString() }.forEach {
@@ -66,7 +82,7 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
             fields.add(createPermissionField(it))
             if (it.parameters.isNotEmpty()) {
                 val hasOnRationaleParams = rpe.findOnRationaleForNeeds(it)?.parameters?.isNotEmpty()
-                        ?: true
+                    ?: true
                 if (hasOnRationaleParams) {
                     fields.add(createPendingRequestField(it))
                 } else {
@@ -83,9 +99,9 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
      */
     private fun createRequestCodeField(e: ExecutableElement, index: Int): FieldSpec {
         return FieldSpec.builder(Int::class.java, requestCodeFieldName(e))
-                .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-                .initializer("\$L", index)
-                .build()
+            .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+            .initializer("\$L", index)
+            .build()
     }
 
     /**
@@ -95,28 +111,28 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
     private fun createPermissionField(e: ExecutableElement): FieldSpec {
         val permissionValue = e.getAnnotation(NeedsPermission::class.java).permissionValue()
         val formattedValue: String = permissionValue.joinToString(
-                separator = ",",
-                prefix = "{",
-                postfix = "}",
-                transform = { "\"$it\"" }
+            separator = ",",
+            prefix = "{",
+            postfix = "}",
+            transform = { "\"$it\"" }
         )
         return FieldSpec.builder(ArrayTypeName.of(String::class.java), permissionFieldName(e))
-                .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-                .initializer("\$N", "new String[] $formattedValue")
-                .build()
+            .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+            .initializer("\$N", "new String[] $formattedValue")
+            .build()
     }
 
     private fun createPendingRequestField(e: ExecutableElement): FieldSpec {
         return FieldSpec.builder(grantableRequest, pendingRequestFieldName(e))
-                .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
-                .build()
+            .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
+            .build()
     }
 
     private fun createArgFields(method: ExecutableElement): List<FieldSpec> {
         return method.parameters.map {
             FieldSpec.builder(typeNameOf(it), method.argumentFieldName(it))
-                    .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
-                    .build()
+                .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
+                .build()
         }
     }
 
@@ -141,22 +157,68 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
     private fun createWithPermissionCheckMethod(rpe: RuntimePermissionsElement, method: ExecutableElement): MethodSpec {
         val targetParam = "target"
         val builder = MethodSpec.methodBuilder(withPermissionCheckMethodName(method))
-                .addTypeVariables(rpe.typeVariables)
-                .addModifiers(Modifier.STATIC)
-                .returns(TypeName.VOID)
-                .addParameter(ParameterSpec.builder(rpe.typeName, targetParam).addAnnotation(NonNull::class.java).build())
+            .addTypeVariables(rpe.typeVariables)
+            .addModifiers(Modifier.STATIC)
+            .returns(TypeName.VOID)
+            .addParameter(ParameterSpec.builder(rpe.typeName, targetParam).addAnnotation(NonNull::class.java).build())
 
         method.parameters.forEach {
             builder.addParameter(typeNameOf(it), it.simpleString())
         }
-        addWithPermissionCheckBody(builder, method, rpe, targetParam)
+//        addWithPermissionCheckBody(builder, method, rpe, targetParam)
+        addWithRxPermissionCheckBody(builder, method, rpe, targetParam)
         return builder.build()
+    }
+
+    /**
+     * 生产RxPermission的代码
+     */
+    private fun addWithRxPermissionCheckBody(
+        builder: MethodSpec.Builder,
+        needsMethod: ExecutableElement,
+        rpe: RuntimePermissionsElement,
+        targetParam: String
+    ) {
+
+        val permissionField = permissionFieldName(needsMethod)
+        /* rxPermissions.request(Manifest.permission.CAMERA,Manifest.permission.READ_PHONE_STATE)
+        .subscribe(granted -> {
+        if (granted) {
+        // All requested permissions are granted
+        } else {
+        // At least one permission is denied
+        }
+        });
+         */
+
+        builder.addCode(
+            CodeBlock.builder()
+                .add("new \$N(\$N)", "com.tbruyelle.rxpermissions2.RxPermissions", targetParam)
+                .add(".request(\$N)", permissionField)
+                .add(".subscribe( granted -> {\n if (granted) {\n")
+                .add("\$N.\$N(", targetParam, needsMethod.simpleString())
+                .add(varargsParametersCodeBlock(needsMethod))
+                .addStatement(")")
+                .nextControlFlow("else")
+                .build()
+        )
+        // Add the "permissionDenied" statement
+        rpe.findOnDeniedForNeeds(needsMethod)?.run {
+            builder.addStatement("\$N.\$N()", targetParam, this.simpleString())
+        }
+        builder.addStatement("}\n})")
+            .build()
     }
 
     /**
      * 创建需要权限的方法体
      */
-    private fun addWithPermissionCheckBody(builder: MethodSpec.Builder, needsMethod: ExecutableElement, rpe: RuntimePermissionsElement, targetParam: String) {
+    private fun addWithPermissionCheckBody(
+        builder: MethodSpec.Builder,
+        needsMethod: ExecutableElement,
+        rpe: RuntimePermissionsElement,
+        targetParam: String
+    ) {
         // Create field names for the constants to use
         val requestCodeField = requestCodeFieldName(needsMethod)
         val permissionField = permissionFieldName(needsMethod)
@@ -165,13 +227,15 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
         val needsPermissionMaxSdkVersion = needsMethod.getAnnotation(NeedsPermission::class.java).maxSdkVersion
         if (needsPermissionMaxSdkVersion > 0) {
             builder.beginControlFlow("if (\$T.VERSION.SDK_INT > \$L)", BUILD, needsPermissionMaxSdkVersion)
-                    .addCode(CodeBlock.builder()
-                            .add("\$N.\$N(", targetParam, needsMethod.simpleString())
-                            .add(varargsParametersCodeBlock(needsMethod))
-                            .addStatement(")")
-                            .addStatement("return")
-                            .build())
-                    .endControlFlow()
+                .addCode(
+                    CodeBlock.builder()
+                        .add("\$N.\$N(", targetParam, needsMethod.simpleString())
+                        .add(varargsParametersCodeBlock(needsMethod))
+                        .addStatement(")")
+                        .addStatement("return")
+                        .build()
+                )
+                .endControlFlow()
         }
 
         // Add the conditional for when permission has already been granted
@@ -182,9 +246,19 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
         */
         val needsPermissionParameter = needsMethod.getAnnotation(NeedsPermission::class.java).value[0]
         val activityVar = getActivityName(targetParam)
-        ADD_WITH_CHECK_BODY_MAP[needsPermissionParameter]?.addHasSelfPermissionsCondition(builder, activityVar, permissionField)
-                ?: builder.beginControlFlow("if (\$T.hasSelfPermissions(\$N, \$N))", PERMISSION_UTILS, activityVar, permissionField)
-        builder.addCode(CodeBlock.builder()
+        ADD_WITH_CHECK_BODY_MAP[needsPermissionParameter]?.addHasSelfPermissionsCondition(
+            builder,
+            activityVar,
+            permissionField
+        )
+            ?: builder.beginControlFlow(
+                "if (\$T.hasSelfPermissions(\$N, \$N))",
+                PERMISSION_UTILS,
+                activityVar,
+                permissionField
+            )
+        builder.addCode(
+            CodeBlock.builder()
                 .add("\$N.\$N(", targetParam, needsMethod.simpleString())
                 .add(varargsParametersCodeBlock(needsMethod))
                 .addStatement(")")
@@ -206,20 +280,22 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
                 // If the method has parameters, precede the potential OnRationale call with
                 // an instantiation of the temporary Request object
                 val varargsCall = CodeBlock.builder()
-                        .add("\$N = new \$N(\$N, ",
-                                pendingRequestFieldName(needsMethod),
-                                permissionRequestTypeName(rpe, needsMethod),
-                                targetParam
-                        )
-                        .add(varargsParametersCodeBlock(needsMethod))
-                        .addStatement(")")
+                    .add(
+                        "\$N = new \$N(\$N, ",
+                        pendingRequestFieldName(needsMethod),
+                        permissionRequestTypeName(rpe, needsMethod),
+                        targetParam
+                    )
+                    .add(varargsParametersCodeBlock(needsMethod))
+                    .addStatement(")")
                 builder.addCode(varargsCall.build())
             } else {
                 needsMethod.parameters.forEach {
                     val varargsCall = CodeBlock.builder().addStatement(
-                            "\$N = \$N",
-                            needsMethod.argumentFieldName(it),
-                            it.simpleName)
+                        "\$N = \$N",
+                        needsMethod.argumentFieldName(it),
+                        it.simpleName
+                    )
                     builder.addCode(varargsCall.build())
                 }
             }
@@ -229,14 +305,25 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
             if (hasParameters) {
                 if (hasOnRationaleParams) {
                     // For methods with parameters, use the PermissionRequest instantiated above
-                    builder.addStatement("\$N.\$N(\$N)", targetParam, onRationale.simpleString(), pendingRequestFieldName(needsMethod))
+                    builder.addStatement(
+                        "\$N.\$N(\$N)",
+                        targetParam,
+                        onRationale.simpleString(),
+                        pendingRequestFieldName(needsMethod)
+                    )
                 } else {
                     builder.addStatement("\$N.\$N()", targetParam, onRationale.simpleString())
                 }
             } else {
                 if (hasOnRationaleParams) {
                     // Otherwise, create a new PermissionRequest on-the-fly
-                    builder.addStatement("\$N.\$N(new \$N(\$N))", targetParam, onRationale.simpleString(), permissionRequestTypeName(rpe, needsMethod), targetParam)
+                    builder.addStatement(
+                        "\$N.\$N(new \$N(\$N))",
+                        targetParam,
+                        onRationale.simpleString(),
+                        permissionRequestTypeName(rpe, needsMethod),
+                        targetParam
+                    )
                 } else {
                     builder.addStatement("\$N.\$N()", targetParam, onRationale.simpleString())
                 }
@@ -250,8 +337,13 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
                 }
              }
         */
-        ADD_WITH_CHECK_BODY_MAP[needsPermissionParameter]?.addRequestPermissionsStatement(builder, targetParam, activityVar, requestCodeField)
-                ?: addRequestPermissionsStatement(builder, targetParam, permissionField, requestCodeField)
+        ADD_WITH_CHECK_BODY_MAP[needsPermissionParameter]?.addRequestPermissionsStatement(
+            builder,
+            targetParam,
+            activityVar,
+            requestCodeField
+        )
+            ?: addRequestPermissionsStatement(builder, targetParam, permissionField, requestCodeField)
         if (onRationale != null) {
             builder.endControlFlow()
         }
@@ -274,11 +366,11 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
         val requestCodeParam = "requestCode"
         val grantResultsParam = "grantResults"
         val builder = MethodSpec.methodBuilder("onActivityResult")
-                .addTypeVariables(rpe.typeVariables)
-                .addModifiers(Modifier.STATIC)
-                .returns(TypeName.VOID)
-                .addParameter(ParameterSpec.builder(rpe.typeName, targetParam).addAnnotation(NonNull::class.java).build())
-                .addParameter(TypeName.INT, requestCodeParam)
+            .addTypeVariables(rpe.typeVariables)
+            .addModifiers(Modifier.STATIC)
+            .returns(TypeName.VOID)
+            .addParameter(ParameterSpec.builder(rpe.typeName, targetParam).addAnnotation(NonNull::class.java).build())
+            .addParameter(TypeName.INT, requestCodeParam)
 
         builder.beginControlFlow("switch (\$N)", requestCodeParam)
         for (needsMethod in rpe.needsElements) {
@@ -293,9 +385,9 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
         }
 
         builder
-                .addCode("default:\n")
-                .addStatement("break")
-                .endControlFlow()
+            .addCode("default:\n")
+            .addStatement("break")
+            .endControlFlow()
 
         return builder.build()
     }
@@ -305,12 +397,12 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
         val requestCodeParam = "requestCode"
         val grantResultsParam = "grantResults"
         val builder = MethodSpec.methodBuilder("onRequestPermissionsResult")
-                .addTypeVariables(rpe.typeVariables)
-                .addModifiers(Modifier.STATIC)
-                .returns(TypeName.VOID)
-                .addParameter(ParameterSpec.builder(rpe.typeName, targetParam).addAnnotation(NonNull::class.java).build())
-                .addParameter(TypeName.INT, requestCodeParam)
-                .addParameter(ArrayTypeName.of(TypeName.INT), grantResultsParam)
+            .addTypeVariables(rpe.typeVariables)
+            .addModifiers(Modifier.STATIC)
+            .returns(TypeName.VOID)
+            .addParameter(ParameterSpec.builder(rpe.typeName, targetParam).addAnnotation(NonNull::class.java).build())
+            .addParameter(TypeName.INT, requestCodeParam)
+            .addParameter(ArrayTypeName.of(TypeName.INT), grantResultsParam)
 
         // For each @NeedsPermission method, add a switch case
         builder.beginControlFlow("switch (\$N)", requestCodeParam)
@@ -328,22 +420,32 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
 
         // Add the default case
         builder
-                .addCode("default:\n")
-                .addStatement("break")
-                .endControlFlow()
+            .addCode("default:\n")
+            .addStatement("break")
+            .endControlFlow()
 
         return builder.build()
     }
 
-    private fun addResultCaseBody(builder: MethodSpec.Builder, needsMethod: ExecutableElement, rpe: RuntimePermissionsElement, targetParam: String, grantResultsParam: String) {
+    private fun addResultCaseBody(
+        builder: MethodSpec.Builder,
+        needsMethod: ExecutableElement,
+        rpe: RuntimePermissionsElement,
+        targetParam: String,
+        grantResultsParam: String
+    ) {
         val onDenied = rpe.findOnDeniedForNeeds(needsMethod)
         val hasDenied = onDenied != null
         val needsPermissionParameter = needsMethod.getAnnotation(NeedsPermission::class.java).value[0]
         val permissionField = permissionFieldName(needsMethod)
 
         // Add the conditional for "permission verified"
-        ADD_WITH_CHECK_BODY_MAP[needsPermissionParameter]?.addHasSelfPermissionsCondition(builder, getActivityName(targetParam), permissionField)
-                ?: builder.beginControlFlow("if (\$T.verifyPermissions(\$N))", PERMISSION_UTILS, grantResultsParam)
+        ADD_WITH_CHECK_BODY_MAP[needsPermissionParameter]?.addHasSelfPermissionsCondition(
+            builder,
+            getActivityName(targetParam),
+            permissionField
+        )
+            ?: builder.beginControlFlow("if (\$T.verifyPermissions(\$N))", PERMISSION_UTILS, grantResultsParam)
 
         // Based on whether or not the method has parameters, delegate to the "pending request" object or invoke the method directly
         val onRationale = rpe.findOnRationaleForNeeds(needsMethod)
@@ -356,11 +458,13 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
                 builder.addStatement("\$N.grant()", pendingField)
                 builder.endControlFlow()
             } else {
-                builder.addCode(CodeBlock.builder()
+                builder.addCode(
+                    CodeBlock.builder()
                         .add("\$N.\$N(", targetParam, needsMethod.simpleString())
                         .add(varargsParametersCodeBlock(needsMethod, withCache = true))
                         .addStatement(")")
-                        .build())
+                        .build()
+                )
             }
         } else {
             builder.addStatement("target.\$N()", needsMethod.simpleString())
@@ -375,7 +479,12 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
         }
         if (hasNeverAsk) {
             // Split up the "else" case with another if condition checking for "never ask again" first
-            addShouldShowRequestPermissionRationaleCondition(builder, targetParam, permissionFieldName(needsMethod), false)
+            addShouldShowRequestPermissionRationaleCondition(
+                builder,
+                targetParam,
+                permissionFieldName(needsMethod),
+                false
+            )
             builder.addStatement("target.\$N()", onNeverAsk?.simpleString())
             // If a "permission denied" is present as well, go into an else case, otherwise close this temporary branch
             if (hasDenied) {
@@ -413,7 +522,10 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
     private fun hasNormalPermission(rpe: RuntimePermissionsElement): Boolean {
         rpe.needsElements.forEach {
             val permissionValue = it.getAnnotation(NeedsPermission::class.java).permissionValue()
-            if (!permissionValue.contains(MANIFEST_SYSTEM_ALERT_WINDOW) && !permissionValue.contains(MANIFEST_WRITE_SETTING)) {
+            if (!permissionValue.contains(MANIFEST_SYSTEM_ALERT_WINDOW) && !permissionValue.contains(
+                    MANIFEST_WRITE_SETTING
+                )
+            ) {
                 return true
             }
         }
@@ -449,29 +561,41 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
         return methods
     }
 
-    private fun createProceedPermissionRequestMethod(rpe: RuntimePermissionsElement, needsMethod: ExecutableElement): MethodSpec {
+    private fun createProceedPermissionRequestMethod(
+        rpe: RuntimePermissionsElement,
+        needsMethod: ExecutableElement
+    ): MethodSpec {
         val targetParam = "target"
         val builder = MethodSpec.methodBuilder(needsMethod.proceedOnShowRationaleMethodName())
-                .addTypeVariables(rpe.typeVariables)
-                .addModifiers(Modifier.STATIC)
-                .returns(TypeName.VOID)
-                .addParameter(ParameterSpec.builder(rpe.typeName, targetParam).addAnnotation(NonNull::class.java).build())
+            .addTypeVariables(rpe.typeVariables)
+            .addModifiers(Modifier.STATIC)
+            .returns(TypeName.VOID)
+            .addParameter(ParameterSpec.builder(rpe.typeName, targetParam).addAnnotation(NonNull::class.java).build())
         val needsPermissionParameter = needsMethod.getAnnotation(NeedsPermission::class.java).value[0]
         val activityVar = getActivityName(targetParam)
         val requestCodeField = requestCodeFieldName(needsMethod)
-        ADD_WITH_CHECK_BODY_MAP[needsPermissionParameter]?.addRequestPermissionsStatement(builder, targetParam, activityVar, requestCodeField)
-                ?: addRequestPermissionsStatement(builder, targetParam, permissionFieldName(needsMethod), requestCodeField)
+        ADD_WITH_CHECK_BODY_MAP[needsPermissionParameter]?.addRequestPermissionsStatement(
+            builder,
+            targetParam,
+            activityVar,
+            requestCodeField
+        )
+            ?: addRequestPermissionsStatement(builder, targetParam, permissionFieldName(needsMethod), requestCodeField)
         return builder.build()
     }
 
-    private fun createCancelPermissionRequestMethod(rpe: RuntimePermissionsElement, onDenied: ExecutableElement, needsMethod: ExecutableElement): MethodSpec {
+    private fun createCancelPermissionRequestMethod(
+        rpe: RuntimePermissionsElement,
+        onDenied: ExecutableElement,
+        needsMethod: ExecutableElement
+    ): MethodSpec {
         return MethodSpec.methodBuilder(needsMethod.cancelOnShowRationaleMethodName())
-                .addTypeVariables(rpe.typeVariables)
-                .addModifiers(Modifier.STATIC)
-                .returns(TypeName.VOID)
-                .addParameter(ParameterSpec.builder(rpe.typeName, "target").addAnnotation(NonNull::class.java).build())
-                .addStatement("target.\$N()", onDenied.simpleString())
-                .build()
+            .addTypeVariables(rpe.typeVariables)
+            .addModifiers(Modifier.STATIC)
+            .returns(TypeName.VOID)
+            .addParameter(ParameterSpec.builder(rpe.typeName, "target").addAnnotation(NonNull::class.java).build())
+            .addStatement("target.\$N()", onDenied.simpleString())
+            .build()
     }
 
     private fun createPermissionRequestClasses(rpe: RuntimePermissionsElement): List<TypeSpec> {
@@ -494,9 +618,9 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
 
         val targetType = rpe.typeName
         val builder = TypeSpec.classBuilder(permissionRequestTypeName(rpe, needsMethod))
-                .addTypeVariables(rpe.typeVariables)
-                .addSuperinterface(ClassName.get("com.cheng.lib.annotatioin", superInterfaceName))
-                .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+            .addTypeVariables(rpe.typeVariables)
+            .addSuperinterface(ClassName.get("com.cheng.lib.annotatioin", superInterfaceName))
+            .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
 
         // Add required fields to the target
         val weakFieldName = "weakTarget"
@@ -509,62 +633,72 @@ abstract class JavaBaseProcessorUnit : JavaProcessorUnit {
         // Add constructor
         val targetParam = "target"
         val constructorBuilder = MethodSpec.constructorBuilder()
-                .addModifiers(Modifier.PRIVATE)
-                .addParameter(ParameterSpec.builder(targetType, targetParam).addAnnotation(NonNull::class.java).build())
-                .addStatement("this.\$L = new WeakReference<\$T>(\$N)", weakFieldName, targetType, targetParam)
+            .addModifiers(Modifier.PRIVATE)
+            .addParameter(ParameterSpec.builder(targetType, targetParam).addAnnotation(NonNull::class.java).build())
+            .addStatement("this.\$L = new WeakReference<\$T>(\$N)", weakFieldName, targetType, targetParam)
         needsMethod.parameters.forEach {
             val fieldName = it.simpleString()
             constructorBuilder
-                    .addParameter(typeNameOf(it), fieldName)
-                    .addStatement("this.\$L = \$N", fieldName, fieldName)
+                .addParameter(typeNameOf(it), fieldName)
+                .addStatement("this.\$L = \$N", fieldName, fieldName)
         }
         builder.addMethod(constructorBuilder.build())
 
         // Add proceed() override
         val proceedMethod: MethodSpec.Builder = MethodSpec.methodBuilder("proceed")
-                .addAnnotation(Override::class.java)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(TypeName.VOID)
-                .addStatement("\$T target = \$N.get()", targetType, weakFieldName)
-                .addStatement("if (target == null) return")
+            .addAnnotation(Override::class.java)
+            .addModifiers(Modifier.PUBLIC)
+            .returns(TypeName.VOID)
+            .addStatement("\$T target = \$N.get()", targetType, weakFieldName)
+            .addStatement("if (target == null) return")
         val requestCodeField = requestCodeFieldName(needsMethod)
-        ADD_WITH_CHECK_BODY_MAP[needsMethod.getAnnotation(NeedsPermission::class.java).value[0]]?.addRequestPermissionsStatement(proceedMethod, targetParam, getActivityName(targetParam), requestCodeField)
-                ?: addRequestPermissionsStatement(proceedMethod, targetParam, permissionFieldName(needsMethod), requestCodeField)
+        ADD_WITH_CHECK_BODY_MAP[needsMethod.getAnnotation(NeedsPermission::class.java).value[0]]?.addRequestPermissionsStatement(
+            proceedMethod,
+            targetParam,
+            getActivityName(targetParam),
+            requestCodeField
+        )
+            ?: addRequestPermissionsStatement(
+                proceedMethod,
+                targetParam,
+                permissionFieldName(needsMethod),
+                requestCodeField
+            )
         builder.addMethod(proceedMethod.build())
 
         // Add cancel() override method
         val cancelMethod: MethodSpec.Builder = MethodSpec.methodBuilder("cancel")
-                .addAnnotation(Override::class.java)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(TypeName.VOID)
+            .addAnnotation(Override::class.java)
+            .addModifiers(Modifier.PUBLIC)
+            .returns(TypeName.VOID)
         val onDenied = rpe.findOnDeniedForNeeds(needsMethod)
         if (onDenied != null) {
             cancelMethod
-                    .addStatement("\$T target = \$N.get()", targetType, weakFieldName)
-                    .addStatement("if (target == null) return")
-                    .addStatement("target.\$N()", onDenied.simpleString())
+                .addStatement("\$T target = \$N.get()", targetType, weakFieldName)
+                .addStatement("if (target == null) return")
+                .addStatement("target.\$N()", onDenied.simpleString())
         }
         builder.addMethod(cancelMethod.build())
 
         // For classes with additional parameters, add a "grant()" method
         if (hasParameters) {
             val grantMethod: MethodSpec.Builder = MethodSpec.methodBuilder("grant")
-                    .addAnnotation(Override::class.java)
-                    .addModifiers(Modifier.PUBLIC)
-                    .returns(TypeName.VOID)
+                .addAnnotation(Override::class.java)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(TypeName.VOID)
             grantMethod
-                    .addStatement("\$T target = \$N.get()", targetType, weakFieldName)
-                    .addStatement("if (target == null) return")
+                .addStatement("\$T target = \$N.get()", targetType, weakFieldName)
+                .addStatement("if (target == null) return")
 
             // Compose the call to the permission-protected method;
             // since the number of parameters is variable, utilize the low-level CodeBlock here
             // to compose the method call and its parameters
             grantMethod.addCode(
-                    CodeBlock.builder()
-                            .add("target.\$N(", needsMethod.simpleString())
-                            .add(varargsParametersCodeBlock(needsMethod))
-                            .addStatement(")")
-                            .build()
+                CodeBlock.builder()
+                    .add("target.\$N(", needsMethod.simpleString())
+                    .add(varargsParametersCodeBlock(needsMethod))
+                    .addStatement(")")
+                    .build()
             )
             builder.addMethod(grantMethod.build())
         }

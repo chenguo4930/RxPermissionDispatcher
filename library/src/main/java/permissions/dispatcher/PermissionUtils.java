@@ -8,6 +8,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.PermissionChecker;
 import android.support.v4.util.SimpleArrayMap;
+import android.util.Log;
 
 
 public final class PermissionUtils {

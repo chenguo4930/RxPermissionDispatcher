@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 
 /**
  * Register some methods which explain why permissions are needed.
+ * 权限申请前，需要显示解释为何需要许可的理由
  *
  * @author ChengGuo
  * @date 2019/3/14

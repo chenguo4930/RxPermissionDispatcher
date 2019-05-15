@@ -8,7 +8,8 @@ import javax.lang.model.type.TypeMirror
 /**
  * ProcessorUnit implementation for Activity.
  */
-class JavaActivityProcessorUnit : JavaBaseProcessorUnit() {
+//class JavaActivityProcessorUnit : JavaBaseProcessorUnit() {
+class JavaActivityProcessorUnit : JavaBaseRxProcessorUnit() {
 
     override fun getTargetType(): TypeMirror = typeMirrorOf("android.app.Activity")
 

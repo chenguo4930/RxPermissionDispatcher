@@ -19,10 +19,25 @@ class RuntimePermissionsElement(val e: TypeElement) {
     val ktTypeVariables = e.typeParameters.map { it.asTypeVariableName() }
     val packageName = e.packageName()
     val inputClassName = e.simpleString()
+    /**
+     * 生产新class的类名称
+     */
     val generatedClassName = inputClassName + GEN_CLASS_SUFFIX
+    /**
+     * 需要申请权限的注解
+     */
     val needsElements = e.childElementsAnnotatedWith(NeedsPermission::class.java)
+    /**
+     * 显示解释为何需要许可的理由的注解
+     */
     private val onRationaleElements = e.childElementsAnnotatedWith(OnShowRationale::class.java)
+    /**
+     * 权限被拒绝的注解
+     */
     private val onDeniedElements = e.childElementsAnnotatedWith(OnPermissionDenied::class.java)
+    /**
+     * 不需要再次提醒的注解
+     */
     private val onNeverAskElements = e.childElementsAnnotatedWith(OnNeverAskAgain::class.java)
 
     init {
