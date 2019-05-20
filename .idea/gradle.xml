@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/library" />
             <option value="$PROJECT_DIR$/processor" />
+            <option value="$PROJECT_DIR$/rxpermissionlib" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

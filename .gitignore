@@ -12,3 +12,4 @@
 /captures
 .externalNativeBuild
 /library/build/
+!/.idea/

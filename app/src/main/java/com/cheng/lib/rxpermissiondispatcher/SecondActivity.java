@@ -2,12 +2,12 @@ package com.cheng.lib.rxpermissiondispatcher;
 
 import android.Manifest;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
 import com.cheng.lib.annotatioin.*;
-import com.tbruyelle.rxpermissions2.RxPermissions;
+import com.cheng.lib.rxpermissionlib.listener.RxPermissionCallBack;
+import com.cheng.lib.rxpermissionlib.RxPermissionUtil;
 
 /**
  * @author ChengGuo
@@ -25,8 +25,22 @@ public class SecondActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                SecondActivityPermissionsDispatcher.showCameraWithPermissionCheck(SecondActivity.this);
+//                SecondActivityPermissionsDispatcher.showCameraWithPermissionCheck(SecondActivity.this);
 //                final RxPermissions rxPermissions = new RxPermissions(SecondActivity.this);
+
+//                RxPermissionUtil.requestPermission(SecondActivity.this, new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA}, new RxPermissionCallBack() {
+                RxPermissionUtil.requestPermission(SecondActivity.this, new String[]{Manifest.permission.CAMERA, Manifest.permission.READ_CONTACTS}, new RxPermissionCallBack() {
+
+                    @Override
+                    public void onGranted() {
+                        Toast.makeText(SecondActivity.this, R.string.show_camera, Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onDenied() {
+                        Toast.makeText(SecondActivity.this, R.string.show_camera, Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
     }
@@ -46,7 +60,7 @@ public class SecondActivity extends AppCompatActivity {
     @OnShowRationale(Manifest.permission.CAMERA)
     void showRationaleForCamera(PermissionRequest request) {
         // NOTE: Show a rationale to explain why the permission is needed, e.g. with a dialog.
-        // Call proceed() or cancel() on the provided PermissionRequest to continue or abort
+        // Call request() or cancel() on the provided PermissionRequest to continue or abort
         Toast.makeText(this, R.string.permission_camera_rationale, Toast.LENGTH_SHORT).show();
     }
 

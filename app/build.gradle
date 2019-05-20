@@ -31,4 +31,6 @@ dependencies {
 
     implementation project(':library')
     kapt project(':processor')
+
+    implementation project(path: ':rxpermissionlib')
 }

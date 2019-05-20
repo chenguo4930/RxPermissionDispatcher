@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         btn_apply_camera.setOnClickListener {
-            showCameraWithPermissionCheck()
+//            showCameraWithPermissionCheck()
         }
 
         btn_start_second_activity.setOnClickListener {
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
     @OnShowRationale(Manifest.permission.CAMERA)
     fun showRationaleForCamera(request: PermissionRequest) {
         // NOTE: Show a rationale to explain why the permission is needed, e.g. with a dialog.
-        // Call proceed() or cancel() on the provided PermissionRequest to continue or abort
+        // Call request() or cancel() on the provided PermissionRequest to continue or abort
         showRationaleDialog(R.string.permission_camera_rationale, request)
     }
 
@@ -64,6 +64,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        onRequestPermissionsResult( requestCode, grantResults)
+//        onRequestPermissionsResult( requestCode, grantResults)
     }
 }
