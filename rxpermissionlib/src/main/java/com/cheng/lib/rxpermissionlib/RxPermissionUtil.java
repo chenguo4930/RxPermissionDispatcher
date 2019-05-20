@@ -1,13 +1,10 @@
 package com.cheng.lib.rxpermissionlib;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import com.cheng.lib.rxpermissionlib.listener.PermissionRequest;
@@ -46,7 +43,6 @@ public final class RxPermissionUtil {
         new PermissionRequestWeakReference(activity, rxPermissionCallBack).showRationale(permissions);
     }
 
-
     /**
      * 判断是否具有某权限
      */
@@ -61,20 +57,6 @@ public final class RxPermissionUtil {
             }
         }
         return true;
-    }
-
-    /**
-     * 兼容fragment
-     */
-    @TargetApi(23)
-    private static boolean shouldShowRequestPermissionRationale(@NonNull Object object, @NonNull String perm) {
-        if (object instanceof Activity) {
-            return ActivityCompat.shouldShowRequestPermissionRationale((Activity) object, perm);
-        } else if (object instanceof android.support.v4.app.Fragment) {
-            return ((android.support.v4.app.Fragment) object).shouldShowRequestPermissionRationale(perm);
-        } else {
-            return false;
-        }
     }
 
     private static final class PermissionRequestWeakReference implements PermissionRequest {
